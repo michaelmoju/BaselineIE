@@ -1,14 +1,10 @@
 package EnglishIE;
 
-import com.google.gson.JsonObject;
-import edu.illinois.cs.cogcomp.core.datastructures.Pair;
-import edu.illinois.cs.cogcomp.core.datastructures.ViewNames;
 import edu.illinois.cs.cogcomp.core.datastructures.textannotation.*;
 import edu.illinois.cs.cogcomp.nlp.corpusreaders.ACEReader;
 import edu.illinois.cs.cogcomp.nlp.corpusreaders.aceReader.annotationStructure.*;
 import edu.illinois.cs.cogcomp.nlp.corpusreaders.aceReader.documentReader.ReadACEAnnotation;
-import org.apache.commons.cli.Options;
-import org.json.JSONArray;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
@@ -55,8 +51,6 @@ public class BenchReader {
     private static final String NYTCORPUS = "/media/moju/data/Data/Corpus/NYT";
     private String corpusHomeDir;
     private String corpusName;
-    private List<ACEEntity> entityList;
-    private List<ACERelation> relationList;
 
     public BenchReader(String corpusName) {
         this.corpusName = corpusName;
@@ -202,8 +196,6 @@ public class BenchReader {
     }
 
     public void write2json(TextAnnotation doc, String docID, List<ACEEntity> entityList, List<ACERelation> relationList, List<ACEEvent> eventList) throws Exception{
-        this.entityList= entityList;
-        this.relationList = relationList;
 
         JSONObject obj = new JSONObject();
 
@@ -224,10 +216,10 @@ public class BenchReader {
                 entityMenitonObj.put("id", mention.id);
                 entityMenitonObj.put("extent", mention.extent);
                 entityMenitonObj.put("position", doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(mention.extentStart)).getSentenceId());
-                entityMentionList.put(entityMenitonObj);
+                entityMentionList.add(entityMenitonObj);
             }
             entityObj.put("entityMentionList", entityMentionList);
-            entityObjList.put(entityObj);
+            entityObjList.add(entityObj);
         }
 
         //Put relation object
@@ -272,11 +264,11 @@ public class BenchReader {
                         relationMenitonObj.put("mentionArg2", mentionArgObj2);
                     }
                 }
-                relationMentionList.put(relationMenitonObj);
+                relationMentionList.add(relationMenitonObj);
             }
             relationObj.put("relationMentionList", relationMentionList);
 
-            relationObjList.put(relationObj);
+            relationObjList.add(relationObj);
         }
 
         //Put event object
@@ -292,7 +284,7 @@ public class BenchReader {
                 JSONObject eventArgObj = new JSONObject();
                 eventArgObj.put("id", eventArg.id);
                 eventArgObj.put("role", eventArg.role);
-                eventArgList.put(eventArgObj);
+                eventArgList.add(eventArgObj);
             }
             eventObj.put("eventArgList", eventArgList);
 
@@ -311,14 +303,14 @@ public class BenchReader {
                     eventMentionArgObj.put("id", eventMentionArg.id);
                     eventMentionArgObj.put("role", eventMentionArg.role);
                     eventMentionArgObj.put("extent", eventMentionArg.argStr);
-                    eventMentionArgList.put(eventMentionArgObj);
+                    eventMentionArgList.add(eventMentionArgObj);
                 }
                 eventMentionObj.put("eventMentionArgList", eventMentionArgList);
 
-                eventMentionList.put(eventMentionObj);
+                eventMentionList.add(eventMentionObj);
             }
             eventObj.put("eventMentionList", eventMentionList);
-            eventObjList.put(eventObj);
+            eventObjList.add(eventObj);
         }
 
         obj.put("docID", docID);

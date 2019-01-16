@@ -1,20 +1,14 @@
 package EnglishIE;
 
-import edu.illinois.cs.cogcomp.core.datastructures.Pair;
-import edu.illinois.cs.cogcomp.core.datastructures.ViewNames;
 import edu.illinois.cs.cogcomp.core.datastructures.textannotation.*;
 import edu.illinois.cs.cogcomp.nlp.corpusreaders.ACEReader;
-import edu.illinois.cs.cogcomp.nlp.corpusreaders.aceReader.annotationStructure.*;
-import edu.illinois.cs.cogcomp.nlp.corpusreaders.aceReader.documentReader.ReadACEAnnotation;
-import org.apache.commons.cli.Options;
 
-import org.json.JSONArray;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class SrcReader {
@@ -45,7 +39,7 @@ public class SrcReader {
 
 
         for (int n=0; n<sentences.size(); n++) {
-            snts.put(n, sentences.get(n));
+            snts.add(n, sentences.get(n));
         }
 
         obj.put("docID", docID);
