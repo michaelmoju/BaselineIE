@@ -133,7 +133,6 @@ public class UIUCIE {
 
         for (Relation r : predictedRelations){
             IOHelper.printRelation(r);
-            r.toString();
         }
 
     }
