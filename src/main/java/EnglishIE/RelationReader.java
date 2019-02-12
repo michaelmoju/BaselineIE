@@ -1,5 +1,6 @@
 package EnglishIE;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.illinois.cs.cogcomp.core.datastructures.textannotation.*;
 import edu.illinois.cs.cogcomp.nlp.corpusreaders.ACEReader;
 import edu.illinois.cs.cogcomp.nlp.corpusreaders.aceReader.annotationStructure.*;
@@ -195,13 +196,12 @@ public class RelationReader {
         }
     }
 
-    public void write2json(TextAnnotation doc, String docID, List<ACEEntity> entityList, List<ACERelation> relationList, List<ACEEvent> eventList) throws Exception{
+    public void write2json(TextAnnotation doc, String docID, List<ACEEntity> entityList, List<ACERelation> relationList) throws Exception{
 
         JSONObject obj = new JSONObject();
 
         JSONArray entityObjList = new JSONArray();
         JSONArray relationObjList = new JSONArray();
-        JSONArray eventObjList = new JSONArray();
 
         //Put entity object
         for (ACEEntity entity: entityList) {
@@ -278,11 +278,13 @@ public class RelationReader {
         JSONValue.toJSONString ( obj );
 
         //Create file directory
-        File file = new File("./" + docID + ".annotation.json");
+        File file = new File("./" + docID + ".relation.json");
         file.getParentFile().mkdirs();
         file.createNewFile();
         FileWriter myWriter = new FileWriter(file);
-        myWriter.write(obj.toJSONString());
+        ObjectMapper mapper = new ObjectMapper();
+        myWriter.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj));
+//        myWriter.write(obj.toJSONString());
         System.out.print(".");
         myWriter.close();
     }
@@ -311,7 +313,7 @@ public class RelationReader {
                     System.out.println(doc.getView("COREF_EXTENT"));
                 }
 
-                write2json(doc, doc.getId(), annotation.entityList, annotation.relationList, annotation.eventList);
+                write2json(doc, doc.getId(), annotation.entityList, annotation.relationList);
             }
 
         }
