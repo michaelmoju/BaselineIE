@@ -11,6 +11,7 @@ import org.json.simple.JSONValue;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -94,17 +95,6 @@ public class RelationReader {
                     entityMentionList.addAll(entity.entityMentionList);
                 }
 
-
-//                SpanLabelView entityView = (SpanLabelView) doc.getView(ViewNames.MENTION_ACE);
-//
-//                CoreferenceView coreferenceView = (CoreferenceView) doc.getView(ViewNames.COREF_HEAD);
-//
-//                CoreferenceView coreferenceExtentView = (CoreferenceView) doc.getView(ViewNames.COREF_EXTENT);
-//
-//                System.out.println(coreferenceView);
-//
-//                System.out.println(coreferenceExtentView);
-
                 /*Relation mentions*/
                 int relationMentions = 0;
                 for (ACERelation relation : annotation.relationList) {
@@ -120,28 +110,6 @@ public class RelationReader {
                         return Integer.compare(o1.extentStart, o2.extentStart);
                     }
                 });
-
-//                for (ACEEntityMention m: entityMentionList) {
-//                    System.out.println(m.extent);
-//                    System.out.println(m.extentStart + " " +m.extentEnd);
-//                    System.out.println(m.ldcType);
-//                }
-
-//                for (Constituent mention : entityView.getConstituents()) {
-////                    int startTokenId =
-////                            doc.getTokenIdFromCharacterOffset(
-////                                    Integer.parseInt(
-////                                            mention.getAttribute(ACEReader.EntityHeadStartCharOffset)));
-////                    int endTokenId =
-////                            doc.getTokenIdFromCharacterOffset(
-////                                    Integer.parseInt(
-////                                            mention.getAttribute(ACEReader.EntityHeadEndCharOffset)) - 1) + 1;
-////                    System.out.println(mention);
-////                    System.out.println(startTokenId + " " + endTokenId);
-////
-////                }
-
-
 
 
                 /*Entity*/
@@ -196,96 +164,62 @@ public class RelationReader {
         }
     }
 
-    public void write2json(TextAnnotation doc, String docID, List<ACEEntity> entityList, List<ACERelation> relationList) throws Exception{
+    public void write2json(TextAnnotation doc, String docID, List<ACERelation> relationList) throws Exception{
+        JSONArray relationMentionList = new JSONArray();
 
-        JSONObject obj = new JSONObject();
-
-        JSONArray entityObjList = new JSONArray();
-        JSONArray relationObjList = new JSONArray();
-
-        //Put entity object
-        for (ACEEntity entity: entityList) {
-            JSONObject entityObj = new JSONObject();
-            JSONArray entityMentionList = new JSONArray();
-            entityObj.put("entityID", entity.id);
-            entityObj.put("entityType", entity.type);
-            entityObj.put("entitySubType", entity.subtype);
-
-            for (ACEEntityMention mention: entity.entityMentionList) {
-                JSONObject entityMenitonObj = new JSONObject();
-                entityMenitonObj.put("id", mention.id);
-                entityMenitonObj.put("extent", mention.extent);
-                entityMenitonObj.put("position", doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(mention.extentStart)).getSentenceId());
-                entityMentionList.add(entityMenitonObj);
-            }
-            entityObj.put("entityMentionList", entityMentionList);
-            entityObjList.add(entityObj);
-        }
-
-        //Put relation object
         for (ACERelation relation: relationList) {
-            JSONObject relationObj = new JSONObject();
-            JSONArray relationMentionList = new JSONArray();
-
-            relationObj.put("relationID", relation.id);
-            relationObj.put("relationType", relation.type);
-            relationObj.put("relationSubType", relation.subtype);
-
-            //Put relationArgument List
-            for (ACERelationArgument relationArg: relation.relationArgumentList) {
-                if (relationArg.role.equals("Arg-1")) {
-                    relationObj.put("relationArg1", relationArg.id);
-                } else if (relationArg.role.equals("Arg-2")) {
-                    relationObj.put("relationArg2", relationArg.id);
-                }
-            }
-
-            assert relationObj.containsKey("relationArg1");
-            assert relationObj.containsKey("relationArg2");
-
-            //Put relationMentionList
             for (ACERelationMention relationMention: relation.relationMentionList){
+
+                int sentence_start = doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(relationMention.extentStart)).getStartSpan();
+                int sentence_end = doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(relationMention.extentStart)).getEndSpan();
+                int sentence_length = doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(relationMention.extentStart)).getTokens().length;
+                String sentence = doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(relationMention.extentStart)).toString();
+
+                assert sentence_length == sentence_end - sentence_start + 1;
+
                 JSONObject relationMenitonObj = new JSONObject();
                 relationMenitonObj.put("id", relationMention.id);
-                relationMenitonObj.put("extent", relationMention.extent);
-                relationMenitonObj.put("position", doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(relationMention.extentStart)).getSentenceId());
+                relationMenitonObj.put("relationID", relation.id);
+                relationMenitonObj.put("relationType", relation.type);
+                relationMenitonObj.put("relationSubType", relation.subtype);
+                relationMenitonObj.put("extent", relationMention.extent.replaceAll("\n", " "));
+                relationMenitonObj.put("Sentence", sentence.replaceAll("\n", " "));
+                JSONArray tokens = new JSONArray();
+                for (String token: doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(relationMention.extentStart)).getTokens()){
+                    tokens.add(token);
+                }
+                relationMenitonObj.put("Tokens", tokens);
+                relationMenitonObj.put("sentence_length", sentence_length);
+                relationMenitonObj.put("sentence_index", doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(relationMention.extentStart)).getSentenceId());
                 for (ACERelationArgumentMention argMention : relationMention.relationArgumentMentionList) {
                     if (argMention.role.equals("Arg-1")) {
                         JSONObject mentionArgObj1 = new JSONObject();
-                        mentionArgObj1.put("id",argMention.id);
-                        mentionArgObj1.put("extent", argMention.argStr);
-                        mentionArgObj1.put("position", doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(argMention.start)).getSentenceId());
+                        mentionArgObj1.put("argMentionid",argMention.id);
+                        mentionArgObj1.put("extent", argMention.argStr.replaceAll("\n", " "));
+                        mentionArgObj1.put("start", doc.getTokenIdFromCharacterOffset(argMention.start) - sentence_start);
+                        mentionArgObj1.put("end", doc.getTokenIdFromCharacterOffset(argMention.end) - sentence_start);
                         relationMenitonObj.put("mentionArg1", mentionArgObj1);
                     } else if (argMention.role.equals("Arg-2")) {
                         JSONObject mentionArgObj2 = new JSONObject();
-                        mentionArgObj2.put("id",argMention.id);
-                        mentionArgObj2.put("extent", argMention.argStr);
-                        mentionArgObj2.put("position", doc.getSentenceFromToken(doc.getTokenIdFromCharacterOffset(argMention.start)).getSentenceId());
+                        mentionArgObj2.put("argMentionid",argMention.id);
+                        mentionArgObj2.put("extent", argMention.argStr.replaceAll("\n", " "));
+                        mentionArgObj2.put("start", doc.getTokenIdFromCharacterOffset(argMention.start) - sentence_start);
+                        mentionArgObj2.put("end", doc.getTokenIdFromCharacterOffset(argMention.end) - sentence_start);
                         relationMenitonObj.put("mentionArg2", mentionArgObj2);
                     }
                 }
                 relationMentionList.add(relationMenitonObj);
             }
-            relationObj.put("relationMentionList", relationMentionList);
-
-            relationObjList.add(relationObj);
         }
 
-        obj.put("docID", docID);
-        obj.put("entityList", entityObjList);
-        obj.put("relationList", relationObjList);
-
-        JSONValue.toJSONString ( obj );
-
         //Create file directory
-        File file = new File("./" + docID + ".relation.json");
+        File file = new File("./" + docID + ".relationMention.json");
         file.getParentFile().mkdirs();
         file.createNewFile();
         FileWriter myWriter = new FileWriter(file);
         ObjectMapper mapper = new ObjectMapper();
-        myWriter.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj));
-//        myWriter.write(obj.toJSONString());
-        System.out.print(".");
+        myWriter.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(relationMentionList));
+        System.out.println(".");
         myWriter.close();
     }
 
@@ -313,7 +247,7 @@ public class RelationReader {
                     System.out.println(doc.getView("COREF_EXTENT"));
                 }
 
-                write2json(doc, doc.getId(), annotation.entityList, annotation.relationList);
+                write2json(doc, doc.getId(), annotation.relationList);
             }
 
         }
@@ -322,10 +256,10 @@ public class RelationReader {
 
     public static void main(String[] args) {
 
-        BenchReader myBenchReader = new BenchReader("ACE05");
+        RelationReader myRelationReader = new RelationReader("ACE05");
         try {
 //            myBenchReader.read();
-            myBenchReader.readAll();
+            myRelationReader.readAll();
         } catch (Exception e) {
             e.printStackTrace();
         }

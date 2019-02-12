@@ -1,5 +1,6 @@
 package EnglishIE;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.illinois.cs.cogcomp.core.datastructures.textannotation.*;
 import edu.illinois.cs.cogcomp.nlp.corpusreaders.ACEReader;
 import edu.illinois.cs.cogcomp.nlp.corpusreaders.aceReader.annotationStructure.*;
@@ -325,7 +326,10 @@ public class BenchReader {
         file.getParentFile().mkdirs();
         file.createNewFile();
         FileWriter myWriter = new FileWriter(file);
-        myWriter.write(obj.toJSONString());
+        ObjectMapper mapper = new ObjectMapper();
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj));
+        myWriter.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj));
+//        myWriter.write(obj.toJSONString());
         System.out.print(".");
         myWriter.close();
     }
